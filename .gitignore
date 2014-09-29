@@ -1,3 +1,33 @@
+# Ignore LyX backup and autosave files
+# http://www.lyx.org/
+*.lyx~
+*.lyx#
+
+# Non-code
+*.pdf
+*.nb
+
+
+# Julia
+/*.tar.gz
+/tmp
+/dist
+/dist-extras
+/julia
+/usr
+/Make.user
+/julia-*
+/source-dist.tmp
+/source-dist.tmp1
+
+*.exe
+*.dll
+*.do
+*.o
+*.dylib
+*.dSYM
+
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
@@ -26,7 +56,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
