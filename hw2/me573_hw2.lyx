@@ -4,6 +4,11 @@
 \begin_header
 \textclass article
 \begin_preamble
+\usepackage{listings}
+\lstset{literate=
+{ω}{{\omega}}1
+{σ}{{\sigma}}1
+}
 % HMCpset header info (uncomment to include)
 %\name{Alex Ames}
 %\class{}
@@ -62,7 +67,7 @@
 \maintain_unincluded_children false
 \language english
 \language_package default
-\inputencoding auto
+\inputencoding utf8-plain
 \fontencoding global
 \font_roman garamondx
 \font_sans biolinum
@@ -129,7 +134,7 @@
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
-\listings_params "basicstyle={\small\ttfamily},breaklines=true,frame=tb"
+\listings_params "basicstyle={\scriptsize\ttfamily},breaklines=true,frame=tb,tabsize=4"
 \tracking_changes false
 \output_changes false
 \html_math_output 0
@@ -238,7 +243,7 @@ Rearranged to solve for
 \begin_inset Formula $P_{i,j}$
 \end_inset
 
-, then simplified to reduce the operation count:
+, then rearranged again to reduce the operation count:
 \begin_inset Formula 
 \begin{align}
 P_{i,j} & =\frac{(P_{i+1,j}+P_{i-1,j})\dd x^{2}+(P_{i,j+1}+P_{i,j-1})\dd y^{2}-\dd x^{2}\dd y^{2}R_{i,j}}{2(\dd x^{2}+\dd y^{2})}\nonumber \\
@@ -310,6 +315,2208 @@ reference "eq:P_solve"
 \[
 P_{i,j}=\frac{2P_{i-1,j}\dd x^{2}+(P_{i,j+1}+P_{i,j-1})\dd y^{2}}{2(\dd x^{2}+\dd y^{2})}-\frac{\dd x^{2}\dd y^{2}R_{i,j}}{2(\dd x^{2}+\dd y^{2})}
 \]
+
+\end_inset
+
+This equation was solved using three different iterative solvers: Jacobi,
+ Gauss-Seidel, and SOR.
+ Jacobi iteration involves computing updated array values taken from the
+ previous solution.
+ Gauss-Seidel iteration is similar to Jacobi, but uses a mix of previous
+ and current array values for the solution.
+ SOR iteration uses Gauss-Seidel to compute an initial solution, then adds
+ an extrapolation of the difference between the current and prior solution,
+ with extrapolation distance controlled by the factor 
+\begin_inset Formula $\omega$
+\end_inset
+
+.
+ Using 
+\begin_inset Formula $k$
+\end_inset
+
+ to refer to the iteration counter, the routines are implemented point-wise
+ as follows:
+\end_layout
+
+\begin_layout Standard
+Jacobi: 
+\begin_inset Formula 
+\begin{align*}
+P_{i,j}^{k+1} & =\frac{(P_{i+1,j}^{k}+P_{i-1,j}^{k})\dd x^{2}+(P_{i,j+1}^{k}+P_{i,j-1}^{k})\dd y^{2}}{2(\dd x^{2}+\dd y^{2})}-\frac{\dd x^{2}\dd y^{2}R_{i,j}}{2(\dd x^{2}+\dd y^{2})}
+\end{align*}
+
+\end_inset
+
+Gauss-Seidel:
+\begin_inset Formula 
+\begin{align*}
+P_{i,j}^{k+1} & =\frac{(P_{i+1,j}^{k}+P_{i-1,j}^{k+1})\dd x^{2}+(P_{i,j+1}^{k}+P_{i,j-1}^{k+1})\dd y^{2}}{2(\dd x^{2}+\dd y^{2})}-\frac{\dd x^{2}\dd y^{2}R_{i,j}}{2(\dd x^{2}+\dd y^{2})}
+\end{align*}
+
+\end_inset
+
+SOR: 
+\begin_inset Formula 
+\begin{align*}
+P_{i,j}^{k+1} & =\omega\cdot\left[\frac{(P_{i+1,j}^{k}+P_{i-1,j}^{k+1})\dd x^{2}+(P_{i,j+1}^{k}+P_{i,j-1}^{k+1})\dd y^{2}}{2(\dd x^{2}+\dd y^{2})}-\frac{\dd x^{2}\dd y^{2}R_{i,j}}{2(\dd x^{2}+\dd y^{2})}-P_{i,j}^{k}\right]+P_{i,j}^{k}
+\end{align*}
+
+\end_inset
+
+The solver was initialized with 
+\begin_inset Formula $P=0$
+\end_inset
+
+ everywhere in the array--since the three pressure boundary conditions are
+ zero, a significant portion of the solution values were assumed to be near
+ zero.
+ Once initial conditions were created, each solver was iterated until convergenc
+e at error 
+\begin_inset Formula $\leq10^{-8}$
+\end_inset
+
+.
+ The relative error measure was defined by the Euclidean norm of the difference
+ between successive solution arrays, normalized by the sum of domain dimensions:
+\begin_inset Formula 
+\[
+\text{Error=}\frac{\Big(\sum_{i,j}\left(P-P_{i,j}^{k+1}\right)\Big)^{\frac{1}{2}}}{\sqrt{\emph{nx+ny}}}
+\]
+
+\end_inset
+
+Comparing methods, the solutions converged to similar values at each inspected
+ location, although the solution values vary past 
+\begin_inset Formula $\sim\negmedspace6$
+\end_inset
+
+ decimal points, which is reflective of the inaccuracy inherent in a relative
+ error measure.
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="10" columns="6">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="decimal" decimal_point="." valignment="top">
+<column alignment="decimal" decimal_point="." valignment="top">
+<column alignment="decimal" decimal_point="." valignment="top">
+<column alignment="right" valignment="top">
+<column alignment="decimal" decimal_point="." valignment="top">
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $P(i,\, j)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Solver
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $P(60,16)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $P(20,40)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $P(70,60)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Iterations
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Time (sec)
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+Jacobi
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926472
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279981
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545366
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+27621
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.30830
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+Gauss-Seidel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926474
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279982
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545369
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+14608
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.32570
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=1.5$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926476
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279983
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545370
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5283
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.97054
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=1.6$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926476
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279983
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545371
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4040
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.74331
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=1.7)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926476
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279984
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545371
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2913
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.53354
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=1.8$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926476
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279984
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545371
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1875
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.35883
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=1.9$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.926476
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279984
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.545371
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+878
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.14222
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+SOR (
+\begin_inset Formula $\omega=2.0$
+\end_inset
+
+)
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.279369
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+-0.339217
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+0.686103
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+30000
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="decimal" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5.51513
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Results from iterative solvers
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Results-from-iterative"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset space \hspace*{\fill}
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename plots/R_vals.png
+	lyxscale 20
+	width 3in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+R values driving pressure distribution
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hspace*{\fill}
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename plots/P_vals.png
+	lyxscale 50
+	width 2.94in
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset Formula $P$
+\end_inset
+
+ satisfying 
+\begin_inset Formula $\laplacian{P}=R$
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:pressure_soln"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hspace*{\fill}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Principal solver input and output 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+The solution values for pressure (figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:pressure_soln"
+
+\end_inset
+
+) are nearly zero for at least half of the cells in the domain, which validates
+ the original guess value of 
+\begin_inset Formula $P=0$
+\end_inset
+
+ throughout.
+ The Jacobi and Gauss-Seidel solvers converge reliably, although they take
+ relatively many iterations to so do.
+ For all solvers, memory allocation seems to scale with the number of iterations
+--approximately 100 kb per iteration.
+ This seems somewhat high, and the most obvious candidate is a type inconsistenc
+y in one of the variables, but I was unable to find the culprit.
+ The SOR solver reduced the number of iterations required for convergence
+ significantly even with a conservative value of 
+\begin_inset Formula $\omega=1.5$
+\end_inset
+
+, and each additional 
+\begin_inset Formula $0.1$
+\end_inset
+
+ added to 
+\begin_inset Formula $\omega$
+\end_inset
+
+ further decreased iterations by a factor of 1.5--2.
+ However, once 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $\omega$
+\end_inset
+
+ reached 2.0, the solution failed to reach converge--a resulting negative
+ pressure value can be seen in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Results-from-iterative"
+
+\end_inset
+
+, which is not physically possible.
+ In short, the chosen value of 
+\begin_inset Formula $\omega$
+\end_inset
+
+ is a tradeoff between convergence speed and stability of results.
+ This suggests that a flexible SOR solver which could adjust the value of
+ 
+\begin_inset Formula $\omega$
+\end_inset
+
+ on-the-fly to maximize error reduction would have reliably good results
+ and fast convergence speed.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+Appendix: Code Listing
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+using ProgressMeter # Load progress meter display library
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Note on performance:
+\end_layout
+
+\begin_layout Plain Layout
+
+# In Julia, if a non-constant variable is defined outside of a function
+ and 
+\end_layout
+
+\begin_layout Plain Layout
+
+# then called by that function, performance decreases significantly, since
+ the
+\end_layout
+
+\begin_layout Plain Layout
+
+# compiler must check the type of the variable for each iteration.
+ Best 
+\end_layout
+
+\begin_layout Plain Layout
+
+# practice is setting all global vars as constants, then iterating within
+ a 
+\end_layout
+
+\begin_layout Plain Layout
+
+# function so the compiler can optimize.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Enter given dimensions =====================================================
+\end_layout
+
+\begin_layout Plain Layout
+
+const L_x 	= 8.		# Length of domain in x-direction
+\end_layout
+
+\begin_layout Plain Layout
+
+const L_y 	= 6.5		# Length of domain in y-direction
+\end_layout
+
+\begin_layout Plain Layout
+
+const x_c 	= 0.75*L_x;	# x-coord of 'pressure source'
+\end_layout
+
+\begin_layout Plain Layout
+
+const y_c 	= 0.35*L_y;	# y-coord of 'pressure source'
+\end_layout
+
+\begin_layout Plain Layout
+
+const A 	= 2.
+\end_layout
+
+\begin_layout Plain Layout
+
+const sigma = 0.05*min(L_x,L_y) 
+\end_layout
+
+\begin_layout Plain Layout
+
+const maxerr= 1e-8		# Maximum allowable solution error
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Generate grid ==============================================================
+\end_layout
+
+\begin_layout Plain Layout
+
+const nx 	= 80 			# Number of mesh points in the x-direction
+\end_layout
+
+\begin_layout Plain Layout
+
+const ny 	= 80 			# Number of mesh points in the y-direction
+\end_layout
+
+\begin_layout Plain Layout
+
+const sqnxny= sqrt(nx+ny)	# Precompute value (used in error measurement)
+\end_layout
+
+\begin_layout Plain Layout
+
+const dx 	= L_x/(nx-1); 	# Distance btwn adjacent mesh points in the x-dir
+\end_layout
+
+\begin_layout Plain Layout
+
+const dy 	= L_y/(ny-1);	# Distance btwn adjacent mesh points in the y-dir
+\end_layout
+
+\begin_layout Plain Layout
+
+# Precompute dx^2 and dy^2, since they are used frequently in calculations
+\end_layout
+
+\begin_layout Plain Layout
+
+const dx2 	= dx^2
+\end_layout
+
+\begin_layout Plain Layout
+
+const dy2 	= dy^2 	
+\end_layout
+
+\begin_layout Plain Layout
+
+# X[i], Y[j] is equivalent to x_i, y_j
+\end_layout
+
+\begin_layout Plain Layout
+
+X = linspace(0.0, L_x, nx) 	# Generate vector with X_i = dx*(i-1)
+\end_layout
+
+\begin_layout Plain Layout
+
+Y = linspace(0.0, L_y, ny) 	# Generate vector with Y_i = dy*(j-1)
+\end_layout
+
+\begin_layout Plain Layout
+
+XX = repmat(X , 1, ny) 	# Repeat the X-loc vector across all y-values
+\end_layout
+
+\begin_layout Plain Layout
+
+YY = repmat(Y', nx, 1)	# Repeat the Y-loc vector across all x-values
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Generate initial conditions ================================================
+\end_layout
+
+\begin_layout Plain Layout
+
+# Compute R as def'd by handout:
+\end_layout
+
+\begin_layout Plain Layout
+
+const R = [-A*exp(-((x-x_c)^2+(y-y_c)^2)/(2*sigma)) for x = X, y = Y]
+\end_layout
+
+\begin_layout Plain Layout
+
+# Precomputes R-term for solution:
+\end_layout
+
+\begin_layout Plain Layout
+
+const Rmod = convert(Array{Float64,2},dx2*dy2*R/(2*(dx2+dy2)))		
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+const denom = 2*(dx2+dy2)	# Precomputes denominator of P-term for solution
+\end_layout
+
+\begin_layout Plain Layout
+
+P0 	 = zeros(nx,ny);		# Initialize pressure matrix as zero everywhere
+\end_layout
+
+\begin_layout Plain Layout
+
+const P_init = copy(P0)		# Lock initial values of P into constant
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Method wrapper =============================================================
+\end_layout
+
+\begin_layout Plain Layout
+
+# Initializes variables and iterates solver until error is sufficiently
+ small.
+\end_layout
+
+\begin_layout Plain Layout
+
+# Note that in Julia, multiple functions with different argument types can
+ be 
+\end_layout
+
+\begin_layout Plain Layout
+
+# given the same name, and the compiler will choose the appropriate function
+\end_layout
+
+\begin_layout Plain Layout
+
+# at runtime
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function methodwrap(solver, maxiter::Int64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P = copy(P_init)
+\end_layout
+
+\begin_layout Plain Layout
+
+	iter = 1 		# Set initial iteration count
+\end_layout
+
+\begin_layout Plain Layout
+
+	err  = 1.0 		# Initialize error value
+\end_layout
+
+\begin_layout Plain Layout
+
+	# Progress: displays progress bar at command prompt
+\end_layout
+
+\begin_layout Plain Layout
+
+	prog = Progress(maxiter,.05, "Solving using $solver: ", 10) 
+\end_layout
+
+\begin_layout Plain Layout
+
+	while (err >= maxerr) && (iter < maxiter) # while(not converged)
+\end_layout
+
+\begin_layout Plain Layout
+
+		P, err = solver(P, maxiter)			 # iteratively solve for P
+\end_layout
+
+\begin_layout Plain Layout
+
+		next!(prog) 						 # increase progress bar counter
+\end_layout
+
+\begin_layout Plain Layout
+
+		iter += 1 							 # increase iteration count; end
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	println()
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (P, iter, err)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function methodwrap(solver, maxiter::Int64, omega::Float64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P = copy(P_init)
+\end_layout
+
+\begin_layout Plain Layout
+
+	iter = 1 		# Set initial iteration count
+\end_layout
+
+\begin_layout Plain Layout
+
+	err  = 1.0 		# Initialize error value
+\end_layout
+
+\begin_layout Plain Layout
+
+	prog = Progress(maxiter,.05, "Solving using $solver with omega=$omega: ",
+ 10)
+\end_layout
+
+\begin_layout Plain Layout
+
+	while (err >= maxerr) && (iter < maxiter)
+\end_layout
+
+\begin_layout Plain Layout
+
+		P, err = solver(P, maxiter, omega)
+\end_layout
+
+\begin_layout Plain Layout
+
+		next!(prog) # Iterates progress bar counter
+\end_layout
+
+\begin_layout Plain Layout
+
+		iter += 1
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	println()
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (P, iter, err)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Function solvers ===========================================================
+\end_layout
+
+\begin_layout Plain Layout
+
+# The solvers themselves do not iterate--they are called by the iterating
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+# function wrapper until convergence.
+\end_layout
+
+\begin_layout Plain Layout
+
+# Error is computed using the relative root mean square method: the Euclidean
+\end_layout
+
+\begin_layout Plain Layout
+
+# norm of the difference between successive solution matrices is itself
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+# normalized to the square root of the sum of solution matrix dimensions.
+\end_layout
+
+\begin_layout Plain Layout
+
+# Descriptions of the solvers can be found in the report at:
+\end_layout
+
+\begin_layout Plain Layout
+
+# https://www.dropbox.com/s/x25q6eb9xu8otza/me573_hw2.pdf?dl=0
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function jacobi(P::Array{Float64,2}, maxiter::Int64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P_old = copy(P)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for j = 2:ny-1
+\end_layout
+
+\begin_layout Plain Layout
+
+		# Main body loop
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = 2:nx-1 # @inbounds turns off bound checking for faster execution
+\end_layout
+
+\begin_layout Plain Layout
+
+			 @inbounds P[i,j] = ((P_old[i+1,j] + P_old[i-1,j])*dx2 
+\end_layout
+
+\begin_layout Plain Layout
+
+								+(P_old[i,j+1] + P_old[i,j-1])*dy2)/denom-Rmod[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+		# RHS boundary condition loop (dP/dx=0)
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = nx
+\end_layout
+
+\begin_layout Plain Layout
+
+			P[i,j] = (2*P_old[i-1,j]*dx2 + (P_old[i,j+1] + P_old[i,j-1])*dy2)/denom
+\end_layout
+
+\begin_layout Plain Layout
+
+					-Rmod[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	err = vecnorm(P-P_old)/sqnxny 
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (P, err)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function gauss_seidel(P::Array{Float64,2}, maxiter::Int64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P_old = copy(P)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for j = 2:ny-1
+\end_layout
+
+\begin_layout Plain Layout
+
+		# Main body loop
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = 2:nx-1 
+\end_layout
+
+\begin_layout Plain Layout
+
+			 @inbounds P[i,j] = ((P[i+1,j] + P[i-1,j])*dx2 
+\end_layout
+
+\begin_layout Plain Layout
+
+			 				   + (P[i,j+1] + P[i,j-1])*dy2)/denom-Rmod[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+		# RHS boundary condition loop (dP/dx=0)
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = nx
+\end_layout
+
+\begin_layout Plain Layout
+
+			P[i,j] = (2*P[i-1,j]*dx2 + (P[i,j+1] + P[i,j-1])*dy2)/denom
+\end_layout
+
+\begin_layout Plain Layout
+
+					-Rmod[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	err = vecnorm(P-P_old)/sqnxny
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (P, err)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function SOR(P::Array{Float64,2}, maxiter::Int64, omega::Float64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P_old = copy(P)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for j = 2:ny-1
+\end_layout
+
+\begin_layout Plain Layout
+
+	# Main body loop
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = 2:nx-1 
+\end_layout
+
+\begin_layout Plain Layout
+
+			 @inbounds P[i,j] = omega*(((P[i+1,j] + P[i-1,j])*dx2 
+\end_layout
+
+\begin_layout Plain Layout
+
+			 				   + (P[i,j+1] + P[i,j-1])*dy2)/denom
+\end_layout
+
+\begin_layout Plain Layout
+
+								-Rmod[i,j]-P_old[i,j])+P_old[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+		# RHS boundary condition loop (dP/dx=0)
+\end_layout
+
+\begin_layout Plain Layout
+
+		for i = nx
+\end_layout
+
+\begin_layout Plain Layout
+
+			P[i,j] = omega*((2*P[i-1,j]*dx2 + (P[i,j+1] + P[i,j-1])*dy2)/denom
+\end_layout
+
+\begin_layout Plain Layout
+
+					 -Rmod[i,j]-P_old[i,j])+P_old[i,j]
+\end_layout
+
+\begin_layout Plain Layout
+
+		end
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	err = vecnorm(P-P_old)/sqnxny
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (P, err)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+## Automatic method comparisons ===============================================
+\end_layout
+
+\begin_layout Plain Layout
+
+# These functions automatically run comparisons of solution methods and
+ return 
+\end_layout
+
+\begin_layout Plain Layout
+
+# the results in a standard format (P_solution, iteration count, final error)
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function method_compare(maxiter::Int64)
+\end_layout
+
+\begin_layout Plain Layout
+
+	methods = [jacobi, gauss_seidel]
+\end_layout
+
+\begin_layout Plain Layout
+
+	lm = length(methods)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P = zeros(nx,ny,lm)
+\end_layout
+
+\begin_layout Plain Layout
+
+	it = zeros(Int64,lm)
+\end_layout
+
+\begin_layout Plain Layout
+
+	errval = zeros(lm)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for i = 1:length(methods)
+\end_layout
+
+\begin_layout Plain Layout
+
+		@time P[:,:,i], it[i], errval[i] = methodwrap(methods[i], maxiter)
+\end_layout
+
+\begin_layout Plain Layout
+
+		println()
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	return P, it, errval, methods
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function method_compare(maxiter::Int64, omegas::Array{Float64,1})
+\end_layout
+
+\begin_layout Plain Layout
+
+	lo = length(omegas)
+\end_layout
+
+\begin_layout Plain Layout
+
+	P = zeros(nx,ny,lo)
+\end_layout
+
+\begin_layout Plain Layout
+
+	it = zeros(Int64,lo)
+\end_layout
+
+\begin_layout Plain Layout
+
+	errval = zeros(lo)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for i in 1:lo
+\end_layout
+
+\begin_layout Plain Layout
+
+		@time P[:,:,i], it[i], errval[i]  = methodwrap(SOR, maxiter, omegas[i])
+\end_layout
+
+\begin_layout Plain Layout
+
+		println()
+\end_layout
+
+\begin_layout Plain Layout
+
+	end
+\end_layout
+
+\begin_layout Plain Layout
+
+	return P, it, errval, omegas
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+function run_comparos()
+\end_layout
+
+\begin_layout Plain Layout
+
+	jacobi_gs_res = method_compare(30000);
+\end_layout
+
+\begin_layout Plain Layout
+
+	SOR_res		  = method_compare(30000,[1.5:.1:2.]);
+\end_layout
+
+\begin_layout Plain Layout
+
+	return (jacobi_gs_res, SOR_res)
+\end_layout
+
+\begin_layout Plain Layout
+
+end
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \end_inset
 

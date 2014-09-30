@@ -12,32 +12,76 @@ julia> include("main.jl")
 run_comparos (generic function with 1 method)
 
 julia> res_J_GS, res_SOR = run_comparos();
-Solving using jacobi:  92%|######### |  ETA: 0:00:00
-elapsed time: 3.286800589 seconds (2835508848 bytes allocated, 46.73% gc time)
+Solving using jacobi:  91%|######### |  ETA: 0:00:00
+elapsed time: 3.308309783 seconds (2835303536 bytes allocated, 46.49% gc time)
 
-Solving using gauss_seidel:  47%|#####     |  ETA: 0:00:03
-elapsed time: 2.327320727 seconds (1499600080 bytes allocated, 34.03% gc time)
-
-Solving using SOR with omega=1.3:  27%|###       |  ETA: 0:00:04
-elapsed time: 1.508090845 seconds (846625756 bytes allocated, 30.45% gc time)
-
-Solving using SOR with omega=1.4:  22%|##        |  ETA: 0:00:04
-elapsed time: 1.226580554 seconds (685114720 bytes allocated, 30.16% gc time)
+Solving using gauss_seidel:  48%|#####     |  ETA: 0:00:02
+elapsed time: 2.325708043 seconds (1499502296 bytes allocated, 33.82% gc time)
 
 Solving using SOR with omega=1.5:  17%|##        |  ETA: 0:00:04
-elapsed time: 0.959577687 seconds (542392660 bytes allocated, 30.02% gc time)
+elapsed time: 0.970546699 seconds (542392660 bytes allocated, 31.12% gc time)
 
 Solving using SOR with omega=1.6:  13%|#         |  ETA: 0:00:05
-elapsed time: 0.735998303 seconds (414764980 bytes allocated, 30.21% gc time)
+elapsed time: 0.743312155 seconds (414662308 bytes allocated, 29.89% gc time)
 
 Solving using SOR with omega=1.7:   9%|#         |  ETA: 0:00:05
-elapsed time: 0.514621447 seconds (299047252 bytes allocated, 28.10% gc time)
+elapsed time: 0.533547075 seconds (299047252 bytes allocated, 29.19% gc time)
 
-Solving using SOR with omega=1.8:   5%|#         |  ETA: 0:00:05
-elapsed time: 0.341262686 seconds (192467332 bytes allocated, 29.15% gc time)
+Solving using SOR with omega=1.8:   6%|#         |  ETA: 0:00:05
+elapsed time: 0.35883575 seconds (192468928 bytes allocated, 33.54% gc time)
 
-Solving using SOR with omega=1.9:   2%|          |  ETA: 0:00:06
-elapsed time: 0.154078395 seconds (90098560 bytes allocated, 29.69% gc time)
+Solving using SOR with omega=1.9:   2%|          |  ETA: 0:00:05
+elapsed time: 0.142226063 seconds (90098560 bytes allocated, 20.64% gc time)
 
-Solving using SOR with omega=2.0:  99%|##########|  ETA: 0:00:00
-elapsed time: 5.435941821 seconds (3080268952 bytes allocated, 29.70% gc time)
+Solving using SOR with omega=2.0: 100%|##########|  ETA: 0:00:00
+elapsed time: 5.515139123 seconds (3080270548 bytes allocated, 30.07% gc time)
+
+display_P((res_J_GS, res_SOR))
+
+Using the jacobi solver, an error value of 9.99859457220474e-9
+was reached after 27621 iterations.
+ At i = 60, j = 16:  P = 0.9264724525397641
+ At i = 20, j = 40:  P = 0.2799810561765633
+ At i = 70, j = 60:  P = 0.5453661617003734
+
+Using the gauss_seidel solver, an error value of 9.993532156031504e-9
+was reached after 14608 iterations.
+ At i = 60, j = 16:  P = 0.9264743365644538
+ At i = 20, j = 40:  P = 0.27998238822501503
+ At i = 70, j = 60:  P = 0.5453687681267009
+
+Using the SOR solver with omega = 1.5, an error value of
+9.98604169050213e-9 was reached after 5283 iterations.
+ At i = 60, j = 16:  P = 0.9264756047192593
+ At i = 20, j = 40:  P = 0.27998329100980157
+ At i = 70, j = 60:  P = 0.5453704817734129
+
+Using the SOR solver with omega = 1.6, an error value of
+9.965933661350304e-9 was reached after 4040 iterations.
+ At i = 60, j = 16:  P = 0.9264757644368868
+ At i = 20, j = 40:  P = 0.27998340464388316
+ At i = 70, j = 60:  P = 0.5453706973307261
+
+Using the SOR solver with omega = 1.7, an error value of
+9.97657259359612e-9 was reached after 2913 iterations.
+ At i = 60, j = 16:  P = 0.9264759042624419
+ At i = 20, j = 40:  P = 0.2799835040064071
+ At i = 70, j = 60:  P = 0.5453708860306669
+
+Using the SOR solver with omega = 1.8, an error value of
+9.97040902746116e-9 was reached after 1875 iterations.
+ At i = 60, j = 16:  P = 0.9264760301956915
+ At i = 20, j = 40:  P = 0.27998359329858113
+ At i = 70, j = 60:  P = 0.5453710554201119
+
+Using the SOR solver with omega = 1.9, an error value of
+9.893757975179258e-9 was reached after 878 iterations.
+ At i = 60, j = 16:  P = 0.9264761482402765
+ At i = 20, j = 40:  P = 0.27998367621858583
+ At i = 70, j = 60:  P = 0.5453712112995428
+
+Using the SOR solver with omega = 2.0, an error value of
+0.16622763147050088 was reached after 30000 iterations.
+ At i = 60, j = 16:  P = 0.2793691058616037
+ At i = 20, j = 40:  P = -0.33921695407545716
+ At i = 70, j = 60:  P = 0.6861027417296349

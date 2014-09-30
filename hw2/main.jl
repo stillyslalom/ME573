@@ -14,7 +14,7 @@ const L_y 	= 6.5		# Length of domain in y-direction
 const x_c 	= 0.75*L_x;	# x-coord of 'pressure source'
 const y_c 	= 0.35*L_y;	# y-coord of 'pressure source'
 const A 	= 2.
-const σ 	= 0.05*min(L_x,L_y) # Note: can use Greek characters (αβγδ, etc.)
+const σ 	= 0.05*min(L_x,L_y) 
 const maxerr= 1e-8		# Maximum allowable solution error
 
 ## Generate grid ==============================================================
@@ -40,11 +40,6 @@ const Rmod = convert(Array{Float64,2},dx2*dy2*R/(2*(dx2+dy2)))
 
 const denom = 2*(dx2+dy2)	# Precomputes denominator of P-term for solution
 P0 	 = zeros(nx,ny);		# Initialize pressure matrix as zero everywhere
-for j = 2:ny-1				# Set P0 equal to R for all non-(P=0) boundaries
-	for i = 2:nx
-		P0[i,j] = Rmod[i,j]
-	end
-end
 const P_init = copy(P0)		# Lock initial values of P into constant
 
 ## Method wrapper =============================================================
@@ -59,7 +54,7 @@ function methodwrap(solver, maxiter::Int64)
 	err  = 1.0 		# Initialize error value
 	# Progress: displays progress bar at command prompt
 	prog = Progress(maxiter,.05, "Solving using $solver: ", 10) 
-	while (err > maxerr) && (iter < maxiter) # while(not converged)
+	while (err >= maxerr) && (iter < maxiter) # while(not converged)
 		P, err = solver(P, maxiter)			 # iteratively solve for P
 		next!(prog) 						 # increase progress bar counter
 		iter += 1 							 # increase iteration count; end
@@ -73,7 +68,7 @@ function methodwrap(solver, maxiter::Int64, ω::Float64)
 	iter = 1 		# Set initial iteration count
 	err  = 1.0 		# Initialize error value
 	prog = Progress(maxiter,.05, "Solving using $solver with omega=$ω: ", 10)
-	while (err > maxerr) && (iter < maxiter)
+	while (err >= maxerr) && (iter < maxiter)
 		P, err = solver(P, maxiter, ω)
 		next!(prog) # Iterates progress bar counter
 		iter += 1
@@ -155,7 +150,7 @@ function method_compare(maxiter::Int64)
 		@time P[:,:,i], it[i], errval[i] = methodwrap(methods[i], maxiter)
 		println()
 	end
-	return P, it, errval
+	return P, it, errval, methods
 end
 
 function method_compare(maxiter::Int64, omegas::Array{Float64,1})
@@ -164,14 +159,14 @@ function method_compare(maxiter::Int64, omegas::Array{Float64,1})
 	it = zeros(Int64,lo)
 	errval = zeros(lo)
 	for i in 1:lo
-		@time P[:,:,i], it[i], errval[i] = methodwrap(SOR, maxiter, omegas[i])
+		@time P[:,:,i], it[i], errval[i]  = methodwrap(SOR, maxiter, omegas[i])
 		println()
 	end
-	return P, it, errval
+	return P, it, errval, omegas
 end
 
 function run_comparos()
 	jacobi_gs_res = method_compare(30000);
-	SOR_res		  = method_compare(30000,[1.3:.1:2.]);
+	SOR_res		  = method_compare(30000,[1.5:.1:2.]);
 	return (jacobi_gs_res, SOR_res)
 end
